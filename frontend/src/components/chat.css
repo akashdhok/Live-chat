@@ -277,3 +277,18 @@ body::before{
   .users-panel{ width:100%; order:2; height:auto; }
   .chat-box{ width:100%; order:1; }
 }
+
+
+.leave-btn{
+  float:right;
+  background:#ef4444;
+  border:none;
+  padding:6px 12px;
+  color:#fff;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.leave-btn:hover{
+  opacity:.9;
+}
