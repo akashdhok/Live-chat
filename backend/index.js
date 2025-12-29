@@ -38,17 +38,15 @@ io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
   // USER JOIN
-  socket.on("join_user", (name) => {
-    socket.username = name;
+socket.on("join_user", (name) => {
+  socket.username = name;
 
-    if (!onlineUsers.includes(name)) {
-      onlineUsers.push(name);
-    }
+  if (!onlineUsers.includes(name)) onlineUsers.push(name);
 
-    console.log("ONLINE USERS:", onlineUsers);
+  io.emit("online_users", onlineUsers);
 
-    io.emit("online_users", onlineUsers);
-  });
+  io.emit("user_event", { type: "join", name });
+});
 
   // TYPING START
   socket.on("typing_start", (name) => {
@@ -67,13 +65,14 @@ io.on("connection", (socket) => {
   });
 
   // DISCONNECT
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-
+ socket.on("disconnect", () => {
+  if (socket.username) {
     onlineUsers = onlineUsers.filter(u => u !== socket.username);
-
     io.emit("online_users", onlineUsers);
-  });
+
+    io.emit("user_event", { type: "leave", name: socket.username });
+  }
+});
 });
 
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
+import EmojiPicker from "emoji-picker-react";
 import "./chat.css";
 import BASE_URL from "../../config/base";
 
@@ -13,10 +14,12 @@ export default function Chat() {
   const [chat, setChat] = useState([]);
   const [users, setUsers] = useState([]);
   const [typingUser, setTypingUser] = useState("");
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [toast, setToast] = useState(null);
 
   const messagesEndRef = useRef(null);
 
-  // --- LOAD OLD MESSAGES ---
+  // LOAD MESSAGES
   useEffect(() => {
     axios.get(`${BASE_URL}/messages`).then(res => {
       const data = Array.isArray(res.data) ? res.data : res.data?.messages || [];
@@ -24,144 +27,133 @@ export default function Chat() {
     });
   }, []);
 
-  // --- SCROLL TO BOTTOM WHEN CHAT UPDATES ---
+  // AUTO SCROLL
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat]);
 
-  // --- SOCKET LISTENERS ---
+  // SOCKET LISTENERS
   useEffect(() => {
-    socket.on("receive_message", data => {
-      setChat(prev => [...prev, data]);
-    });
-
+    socket.on("receive_message", data => setChat(prev => [...prev, data]));
     socket.on("online_users", list => setUsers(list));
 
-    socket.on("user_typing", data => {
-      if (data.typing) setTypingUser(data.name);
-      else setTypingUser("");
+    socket.on("user_typing", data =>
+      setTypingUser(data.typing ? data.name : "")
+    );
+
+    socket.on("user_event", evt => {
+      setToast(evt.type === "join" ? `${evt.name} joined` : `${evt.name} left`);
+      setTimeout(() => setToast(null), 2000);
     });
 
     return () => {
       socket.off("receive_message");
       socket.off("online_users");
       socket.off("user_typing");
+      socket.off("user_event");
     };
   }, []);
 
-  // --- JOIN CHAT ---
+  // JOIN
   const joinChat = () => {
-    if (!name.trim()) return alert("Enter name");
+    if (!name.trim()) return;
     socket.emit("join_user", name);
     setJoined(true);
   };
 
-  // --- SEND MESSAGE ---
+  // SEND
   const sendMessage = () => {
     if (!message.trim()) return;
-
     socket.emit("send_message", { name, message });
     socket.emit("typing_stop", name);
-
     setMessage("");
   };
 
   return (
     <div className="app">
 
+      {toast && <div className="toast">{toast}</div>}
+
       {!joined ? (
         <div className="join-card">
           <h2>Join Chat</h2>
-
-          <input
-            className="input"
-            placeholder="Enter your name..."
-            value={name}
-            onChange={e => setName(e.target.value)}
-          />
-
-          <button className="btn" onClick={joinChat}>Enter Chat</button>
+          <input className="input" value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/>
+          <button className="btn" onClick={joinChat}>Enter</button>
         </div>
       ) : (
 
         <div className="chat-layout">
 
-          {/* LEFT USERS PANEL */}
+          {/* USERS */}
           <div className="users-panel">
-            <h3>🟢 Online Users</h3>
+            <h3>🟢 Online ({users.length})</h3>
 
-            {users.map((u, i) => (
-              <div key={i} className={u === name ? "user-item me-user" : "user-item"}>
+            {users.map((u,i)=>(
+              <div key={i} className={u===name ? "user-item me-user" : "user-item"}>
+                <span className="dot"></span>
                 {u}
               </div>
             ))}
           </div>
 
-          {/* CHAT BOX */}
+          {/* CHAT */}
           <div className="chat-box">
 
-            <div className="header">
-              Welcome <b>{name}</b>
-            </div>
+            <div className="header">Welcome {name}</div>
 
-            {typingUser && typingUser !== name && (
-              <div className="typing">
-                🟡 {typingUser} is typing...
+            {typingUser && typingUser!==name && (
+              <div className="typing-anim">
+                {typingUser} is typing
+                <span>.</span><span>.</span><span>.</span>
               </div>
             )}
 
             <div className="messages">
-
-              {chat.map((m, i) => (
-                <div
-                  key={i}
-                  className={m.name === name ? "msg me" : "msg"}
-                >
+              {chat.map((m,i)=>(
+                <div key={i} className={m.name===name ? "msg me" : "msg"}>
                   <div className="bubble">
-                    <span className="user">
-                      {m.name === name ? "You" : m.name}
-                    </span>
-
+                    <span className="user">{m.name===name?"You":m.name}</span>
                     <pre className="text">{m.message}</pre>
                   </div>
                 </div>
               ))}
-
-              {/* AUTO SCROLL TARGET */}
               <div ref={messagesEndRef}></div>
             </div>
 
-            {/* INPUT AREA */}
             <div className="input-row">
+
+              <button className="emoji-btn" onClick={()=>setShowEmoji(v=>!v)}>😀</button>
+
+              {showEmoji && (
+                <div className="emoji-box">
+                  <EmojiPicker onEmojiClick={e=>setMessage(prev=>prev+e.emoji)}/>
+                </div>
+              )}
 
               <textarea
                 className="input input-textarea"
-                placeholder="Type message..."
                 value={message}
-                onChange={e => {
+                placeholder="Type message..."
+                onChange={e=>{
                   setMessage(e.target.value);
                   socket.emit("typing_start", name);
                 }}
-                onBlur={() => socket.emit("typing_stop", name)}
-                onKeyDown={e => {
-                  if (e.key === "Enter" && !e.shiftKey) {
+                onBlur={()=>socket.emit("typing_stop", name)}
+                onKeyDown={e=>{
+                  if(e.key==="Enter" && !e.shiftKey){
                     e.preventDefault();
                     sendMessage();
                   }
                 }}
               />
 
-              <button className="btn" onClick={sendMessage}>
-                Send
-              </button>
+              <button className="btn send-btn" onClick={sendMessage}>Send</button>
 
             </div>
 
           </div>
-
         </div>
       )}
-
     </div>
   );
 }
