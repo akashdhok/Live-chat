@@ -33,10 +33,11 @@ const io = new Server(server, {
   },
 });
 let onlineUsers = [];
+
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // ---- USER JOIN ----
+  // USER JOIN
   socket.on("join_user", (name) => {
     socket.username = name;
 
@@ -44,30 +45,37 @@ io.on("connection", (socket) => {
       onlineUsers.push(name);
     }
 
+    console.log("ONLINE USERS:", onlineUsers);
+
     io.emit("online_users", onlineUsers);
   });
+
+  // TYPING START
   socket.on("typing_start", (name) => {
     socket.broadcast.emit("user_typing", { name, typing: true });
   });
 
+  // TYPING STOP
   socket.on("typing_stop", (name) => {
     socket.broadcast.emit("user_typing", { name, typing: false });
   });
-  // ---- SEND MESSAGE ----
+
+  // SEND MESSAGE
   socket.on("send_message", async (data) => {
     await saveMessage(data);
     io.emit("receive_message", data);
   });
 
-  // ---- DISCONNECT ----
+  // DISCONNECT
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
 
-    onlineUsers = onlineUsers.filter((u) => u !== socket.username);
+    onlineUsers = onlineUsers.filter(u => u !== socket.username);
 
     io.emit("online_users", onlineUsers);
   });
 });
+
 
 app.use("/", (req, res) => {
   res.send("API is running....");
