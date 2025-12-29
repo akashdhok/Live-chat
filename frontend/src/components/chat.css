@@ -1,0 +1,91 @@
+* {
+  box-sizing: border-box;
+  font-family: Arial;
+}
+
+body {
+  background: #0f172a;
+  margin: 0;
+}
+
+.outer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.card,
+.chat-box {
+  background: #111827;
+  padding: 20px;
+  border-radius: 14px;
+  color: white;
+  width: 350px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4);
+}
+
+.card h2 {
+  text-align: center;
+}
+
+.input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin: 10px 0;
+  outline: none;
+}
+
+.btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #22c55e;
+  color: white;
+  cursor: pointer;
+}
+
+.btn:hover {
+  opacity: .9;
+}
+
+.header {
+  background: #1f2937;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.messages {
+  height: 350px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.msg {
+  background: #1f2937;
+  margin: 6px 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  width: fit-content;
+  max-width: 75%;
+}
+
+.msg .user {
+  display: block;
+  color: #60a5fa;
+  font-size: 12px;
+}
+
+.me {
+  background: #2563eb;
+  margin-left: auto;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+}
