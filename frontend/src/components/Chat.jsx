@@ -3,7 +3,8 @@ import { io } from "socket.io-client";
 import axios from "axios";
 import "./chat.css";
 import BASE_URL from "../../config/base";
-
+import EmojiPicker from "emoji-picker-react";
+import { useClickAway } from "react-use";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -17,18 +18,16 @@ export default function Chat() {
   const [chat, setChat] = useState([]);
   const [users, setUsers] = useState([]);
   const [typingUser, setTypingUser] = useState("");
+  const [showEmoji, setShowEmoji] = useState(false);
 
+  const emojiRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   /* ---------------- TOASTS ---------------- */
   const showJoinToast = (user) => toast.success(`${user} joined the chat 🎉`);
-
   const showLeaveToast = (user) => toast.info(`${user} left the chat 👋`);
-
   const showSelfJoinToast = () => toast.success("You joined the chat 🎉");
-
   const showSelfLeaveToast = () => toast.warn("You left the chat 👋");
-
   const showMsgToast = (user, msg) => toast(`${user}: ${msg}`, { icon: "💬" });
 
   /* -------- LOAD OLD MESSAGES ---------- */
@@ -64,10 +63,7 @@ export default function Chat() {
     socket.on("receive_message", (data) => {
       setChat((prev) => [...prev, data]);
 
-      // 🔥 show toast only for others
-      if (data?.name !== name) {
-        showMsgToast(data.name, data.message);
-      }
+      if (data?.name !== name) showMsgToast(data.name, data.message);
     });
 
     socket.on("online_users", (list) => setUsers(list));
@@ -106,6 +102,13 @@ export default function Chat() {
     showSelfJoinToast();
   };
 
+  /* -------- EMOJI HANDLERS ---------- */
+  useClickAway(emojiRef, () => setShowEmoji(false));
+
+  const onEmojiClick = (emojiObj) => {
+    setMessage((prev) => prev + emojiObj.emoji);
+  };
+
   /* -------- SEND MESSAGE ---------- */
   const sendMessage = () => {
     if (!message.trim()) return;
@@ -114,6 +117,7 @@ export default function Chat() {
     socket.emit("typing_stop", name);
 
     setMessage("");
+    setShowEmoji(false);
   };
 
   /* -------- LEAVE CHAT ---------- */
@@ -192,9 +196,7 @@ export default function Chat() {
 
             {typingUser && typingUser !== name && (
               <div className="typing-anim">
-                {typingUser} is typing<span>.</span>
-                <span>.</span>
-                <span>.</span>
+                {typingUser} is typing<span>.</span><span>.</span><span>.</span>
               </div>
             )}
 
@@ -213,7 +215,32 @@ export default function Chat() {
               <div ref={messagesEndRef}></div>
             </div>
 
+            {/* 🔥 INPUT + EMOJI + SEND */}
             <div className="input-row">
+
+              <div className="emoji-wrap" ref={emojiRef}>
+                <button
+                  type="button"
+                  className="emoji-btn"
+                  onClick={() => {
+                    setShowEmoji(!showEmoji);
+                    document.activeElement.blur();
+                  }}
+                >
+                  😊
+                </button>
+
+                {showEmoji && (
+                  <div className="emoji-box">
+                    <EmojiPicker
+                      onEmojiClick={onEmojiClick}
+                      theme="dark"
+                      height={350}
+                    />
+                  </div>
+                )}
+              </div>
+
               <textarea
                 className="input input-textarea"
                 placeholder="Type message..."
