@@ -292,3 +292,58 @@ body::before{
 .leave-btn:hover{
   opacity:.9;
 }
+
+
+
+.chat-toast {
+  background: rgba(30, 30, 30, 0.75) !important;
+  backdrop-filter: blur(10px);
+  border-radius: 14px !important;
+  padding: 10px 14px !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.chat-toast-body {
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.chat-toast svg {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+/* Progress bar */
+.chat-toast-progress {
+  height: 4px !important;
+  border-radius: 30px;
+}
+
+/* Animations */
+.Toastify__toast--enter {
+  animation: popIn .28s ease-out both;
+}
+
+@keyframes popIn {
+  0% { transform: translateY(-10px) scale(.9); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.Toastify__toast--success {
+  background: rgba(0, 160, 90, 0.75) !important;
+}
+
+.Toastify__toast--info {
+  background: rgba(0, 120, 255, 0.75) !important;
+}
+
+.Toastify__toast--warning {
+  background: rgba(255, 170, 0, 0.75) !important;
+}
+
+.Toastify__toast--error {
+  background: rgba(255, 70, 70, 0.75) !important;
+}
